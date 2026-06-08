@@ -52,6 +52,19 @@ class PresignedRequest(BaseModel):
             raise ValueError("Archivo supera el limite de 14 MB")
         return v
 
+class RenameRequest(BaseModel):
+    newName: str
+
+    @field_validator("newName")
+    @classmethod
+    def validate_new_name(cls, v):
+        if not re.match(r'^[\w\-. ]+$', v):
+            raise ValueError("Nombre con caracteres no permitidos")
+        ext = v.rsplit(".", 1)[-1].lower() if "." in v else ""
+        if ext not in ALLOWED_EXTENSIONS:
+            raise ValueError("Solo se permiten: DOCX, ODT, RTF")
+        return v
+
 @app.get("/healthz")
 def health():
     return {"status": "ok", "bucket": BUCKET, "region": REGION}
@@ -69,3 +82,43 @@ def presigned_url(req: PresignedRequest):
     except ClientError:
         raise HTTPException(500, detail="Error al generar URL de subida")
     return {"presignedUrl": url, "key": key}
+
+@app.get("/api/files")
+def list_files():
+    try:
+        resp = s3.list_objects_v2(Bucket=BUCKET, Prefix="uploads/")
+        files = []
+        for obj in resp.get("Contents", []):
+            files.append({
+                "key": obj["Key"],
+                "name": obj["Key"].replace("uploads/", ""),
+                "size": obj["Size"],
+                "lastModified": obj["LastModified"].isoformat(),
+            })
+        return {"files": files}
+    except ClientError:
+        raise HTTPException(500, detail="Error al listar archivos")
+
+@app.delete("/api/files/{file_name}")
+def delete_file(file_name: str):
+    key = f"uploads/{file_name}"
+    try:
+        s3.delete_object(Bucket=BUCKET, Key=key)
+        return {"message": f"Archivo {file_name} eliminado correctamente"}
+    except ClientError:
+        raise HTTPException(500, detail="Error al eliminar archivo")
+
+@app.post("/api/files/{file_name}/rename")
+def rename_file(file_name: str, req: RenameRequest):
+    old_key = f"uploads/{file_name}"
+    new_key = f"uploads/{req.newName}"
+    try:
+        s3.copy_object(
+            Bucket=BUCKET,
+            CopySource={"Bucket": BUCKET, "Key": old_key},
+            Key=new_key,
+        )
+        s3.delete_object(Bucket=BUCKET, Key=old_key)
+        return {"message": "Archivo renombrado correctamente", "newKey": new_key}
+    except ClientError:
+        raise HTTPException(500, detail="Error al renombrar archivo")
