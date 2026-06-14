@@ -191,6 +191,75 @@ function useToast() {
   return { toasts, addToast, removeToast };
 }
 
+// ============================================================
+// UTILIDADES
+// ============================================================
+
+/** Formatea bytes a unidades legibles */
+function formatSize(bytes) {
+  if (!bytes || bytes === 0) return "0 B";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** Obtiene la extensión de un nombre de archivo */
+function getExtension(name) {
+  if (!name) return "";
+  return name.split(".").pop().toLowerCase();
+}
+
+/**
+ * Sanitiza el nombre del archivo para que sea compatible con el backend.
+ * La regex del backend solo permite: letras, números, _, -, . y espacios.
+ * Reemplaza cualquier otro carácter (paréntesis, corchetes, etc.) por _
+ */
+function sanitizeFileName(name) {
+  if (!name) return name;
+  const ext = getExtension(name);
+  // Separar nombre base de la extensión
+  const baseName = name.substring(0, name.length - ext.length - 1);
+  // Reemplazar caracteres no permitidos por _
+  const sanitized = baseName.replace(/[^\w\-. ]/g, "_");
+  // Eliminar guiones bajos duplicados consecutivos
+  const cleaned = sanitized.replace(/_+/g, "_").replace(/^_|_$/g, "");
+  return `${cleaned}.${ext}`;
+}
+
+/** Formatea una fecha ISO a formato legible */
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("es-CL", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
+
+/**
+ * Clasifica errores HTTP en mensajes amigables para el usuario.
+ * SEC: No expone detalles internos del servidor.
+ */
+function getErrorMessage(error, context = "operación") {
+  if (axios.isCancel(error)) return "Operación cancelada";
+  if (!error.response) return `Error de conexión al ${context}. Verifica tu red.`;
+  const status = error.response.status;
+  if (status === 400) return `Solicitud inválida en ${context}`;
+  if (status === 404) return `Recurso no encontrado`;
+  if (status === 409) return `Conflicto: el archivo ya existe con ese nombre`;
+  if (status === 413) return `El archivo excede el tamaño permitido (14 MB)`;
+  if (status === 429) return `Demasiadas solicitudes. Intenta en un momento.`;
+  if (status >= 500) return `Error del servidor. Intenta más tarde.`;
+  return `Error inesperado en ${context}`;
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
