@@ -154,6 +154,43 @@ function useDebounce(value, delay) {
   return debounced;
 }
 
+// ============================================================
+// HOOK: useToast — sistema de notificaciones toast
+// Tipos: "success", "error", "warning", "info"
+// ============================================================
+
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+  const counterRef = useRef(0);
+
+  const addToast = useCallback((message, type = "info") => {
+    const id = ++counterRef.current;
+    setToasts((prev) => [...prev, { id, message, type, exiting: false }]);
+
+    // Programar la salida con animación
+    setTimeout(() => {
+      setToasts((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, exiting: true } : t))
+      );
+      // Eliminar del DOM después de la animación de salida
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 300);
+    }, TOAST_DURATION);
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, exiting: true } : t))
+    );
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 300);
+  }, []);
+
+  return { toasts, addToast, removeToast };
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
