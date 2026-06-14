@@ -1,13 +1,40 @@
-import { useState, useEffect } from "react";
+// ============================================================
+// ArchivaCloud P-12 — Gestor Documental con Amazon S3
+// Archivo único: App.jsx
+// Stack: React 19 + Vite + axios (sin librerías de UI externas)
+// Formatos: DOCX, ODT, RTF — Máximo 14 MB
+// ============================================================
+
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
+
+// ============================================================
+// CONSTANTES GLOBALES
+// ============================================================
 
 const API = "http://localhost:8000";
 
+// MIME types permitidos para las extensiones válidas (SEC-03)
 const MIME_TYPES = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   odt: "application/vnd.oasis.opendocument.text",
   rtf: "application/rtf",
 };
+
+// Extensiones permitidas — usadas en validación frontend (SEC-03)
+const ALLOWED_EXTENSIONS = ["docx", "odt", "rtf"];
+
+// Límite de tamaño: 14 MB en bytes (SEC-04)
+const MAX_FILE_SIZE = 14 * 1024 * 1024;
+
+// Configuración de reintentos automáticos para la subida
+const MAX_UPLOAD_RETRIES = 2;
+
+// Duración del toast antes de desaparecer (ms)
+const TOAST_DURATION = 4500;
+
+// Delay del debounce para el input de renombrar (ms)
+const DEBOUNCE_DELAY = 300;
 
 export default function App() {
   const [files, setFiles] = useState([]);
