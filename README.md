@@ -316,7 +316,7 @@ Tag de versión final: https://github.com/Jsaez-a113/Certamen3-Aws/releases/tag/
 | 22 | [feat: implementar estados, efectos y subida con progreso, retry y AbortController](https://github.com/Jsaez-a113/Certamen3-Aws/commit/a36d7929093a5c6201ad6a966499369d39a470ed) | Upload con retry automático y cancelación | S4 |
 | 23 | [feat: implementar drag-drop, eliminar con modal y renombrar con extensión bloqueada](https://github.com/Jsaez-a113/Certamen3-Aws/commit/228c6347284655bd6f6c81fa21e9357935a3af55) | Drag & drop y UX mejorada | S4 |
 | 24 | [feat: rediseñar interfaz completa con header, upload zone, tabla y footer](https://github.com/Jsaez-a113/Certamen3-Aws/commit/24cb39bed2ba170582cf69ef77935ccd6695fd35) | Interfaz final completa y responsiva | S4 |
-| 25 | docs: update README with complete commit history and v1.0.0 tag | README final con historial completo | S4 |
+| 25 | [docs: update README with complete commit history and v1.0.0 tag](https://github.com/Jsaez-a113/Certamen3-Aws/commit/50f75d8f42f611cc7645d8a8d4742866484f7983) | README final con historial completo | S4 |
  
 ---
 
