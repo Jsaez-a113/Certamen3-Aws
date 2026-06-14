@@ -285,21 +285,39 @@ Ver detalles en: `docs/reporte-seguridad.md`
 
 ---
 
-## 13. Commits clave
-
-Ver historial completo en: https://github.com/Jsaez-a113/Certamen3-Aws/commits/main
-
-| Commit | Descripción |
-|---|---|
-| `feat: initial project structure for ArchivaCloud P-12` | Estructura base del proyecto |
-| `feat: add FastAPI app with CORS and P-12 validations` | Backend inicial con validaciones |
-| `chore: update dependencies for Python 3.13 compatibility` | Compatibilidad Python 3.13 |
-| `feat: add GET /healthz and POST /api/upload/presigned-url endpoints` | Endpoints Sprint 1 |
-| `feat: add GET /api/files, DELETE and POST rename endpoints` | Endpoints Sprint 2 y 3 |
-| `feat: add React frontend with upload, list, delete and rename` | Frontend completo |
-| `fix: update dependencies to fix vulnerabilities - SEC-09 pip-audit clean` | Corrección vulnerabilidades |
-| `docs: add security report, feature-extra and AI declaration` | Documentación de seguridad |
-
+## 13. Historial de commits (25 commits)
+ 
+Ver historial completo en: https://github.com/Jsaez-a113/Certamen3-Aws/commits/main  
+Tag de versión final: https://github.com/Jsaez-a113/Certamen3-Aws/releases/tag/v1.0.0
+ 
+| # | Commit | Descripción | Sprint |
+|---|---|---|---|
+| 1 | [feat: initial project structure for ArchivaCloud P-12](https://github.com/Jsaez-a113/Certamen3-Aws/commit/4faca22ffd26531aec423655e0f7354cf575a9d7) | Estructura base del proyecto | S1 |
+| 2 | [feat: add FastAPI app with CORS and P-12 validations](https://github.com/Jsaez-a113/Certamen3-Aws/commit/b79ad859fa50cca1c59afd02054e78faa2330b10) | Backend con validaciones SEC-02/03/04 | S1 |
+| 3 | [chore: update dependencies for Python 3.13 compatibility](https://github.com/Jsaez-a113/Certamen3-Aws/commit/5e7f8bc8fdba1ef3f04d2bf3b6b181aeecdca788) | Compatibilidad Python 3.13 | S1 |
+| 4 | [feat: add GET /api/files, DELETE and POST rename endpoints](https://github.com/Jsaez-a113/Certamen3-Aws/commit/61122c03d5e3cc68296fa3ccf45e7ee074ea373c) | Endpoints listar, eliminar y renombrar | S2 |
+| 5 | [feat: add React frontend with upload, list, delete and rename](https://github.com/Jsaez-a113/Certamen3-Aws/commit/a12f0b788e7d228d7f6ba0f0736b658119f85791) | Frontend base React + Vite | S2 |
+| 6 | [feat: add React frontend with upload, list, delete and rename](https://github.com/Jsaez-a113/Certamen3-Aws/commit/fc0ba8aaf0bcf6cb330421a7f358a77dd8c18abe) | Frontend con todas las funcionalidades | S2 |
+| 7 | [fix: update dependencies to fix vulnerabilities - SEC-09 pip-audit clean](https://github.com/Jsaez-a113/Certamen3-Aws/commit/727ef2264061e1e307d23627b082620511c9cf04) | Corrección vulnerabilidades SEC-09 | S3 |
+| 8 | [Se agrego carpeta docs con diagrama de arquitectura](https://github.com/Jsaez-a113/Certamen3-Aws/commit/4b2e315723c1649b295e4576be7061e3ce4f2188) | Diagrama manuscrito de arquitectura | S3 |
+| 9 | [Se agrego reporte de seguridad](https://github.com/Jsaez-a113/Certamen3-Aws/commit/d23c0cda6473a9d7e6afb23ca0ec4a73bb21594c) | Reporte SEC-01 a SEC-10 | S3 |
+| 10 | [Actualización de README con más detalle](https://github.com/Jsaez-a113/Certamen3-Aws/commit/49505392d9fceeff1fcd42f4139fae6140b29f62) | README completo según Anexo D | S3 |
+| 11 | [style: reemplazar estilos globales con reset CSS y tema oscuro base](https://github.com/Jsaez-a113/Certamen3-Aws/commit/ec9445f7e7b29ea73d4bb56fe4ef7d01344cf276) | Reset CSS y tema oscuro global | S4 |
+| 12 | [refactor: extraer constantes de configuración y validación SEC-03/SEC-04](https://github.com/Jsaez-a113/Certamen3-Aws/commit/60a305b5e8b070e14e5febf06441eca7156d717d) | Constantes de validación extraídas | S4 |
+| 13 | [style: agregar paleta de colores para tema oscuro profesional](https://github.com/Jsaez-a113/Certamen3-Aws/commit/00005fb9b5333a1358dedec16f2d64a8fa432b53) | Paleta de colores profesional | S4 |
+| 14 | [feat: inyectar animaciones CSS keyframes al montar la aplicación](https://github.com/Jsaez-a113/Certamen3-Aws/commit/c9d29a2e7a56f5b374fad9f11fb9a7d2779d69d4) | Animaciones CSS (slideIn, fadeIn, shimmer) | S4 |
+| 15 | [feat: agregar hook useDebounce para optimizar input de renombrado](https://github.com/Jsaez-a113/Certamen3-Aws/commit/f4500daeedec64a9e825939f304080a8aee8d515) | Hook useDebounce para optimización | S4 |
+| 16 | [feat: agregar hook useToast para sistema de notificaciones](https://github.com/Jsaez-a113/Certamen3-Aws/commit/1bcae777863e8e186c7e9d9ca6f622296a6c0e22) | Sistema de notificaciones toast | S4 |
+| 17 | [feat: agregar utilidades — formatSize, sanitizeFileName, getErrorMessage](https://github.com/Jsaez-a113/Certamen3-Aws/commit/7d3552445a49c81d2d66f65e767ea1a8a7fd36d7) | Funciones utilitarias del frontend | S4 |
+| 18 | [feat: agregar componente FileIcon con SVG por extensión](https://github.com/Jsaez-a113/Certamen3-Aws/commit/489e283a9fe9bb5a3e0537e0a0d360655099110a) | Íconos SVG por tipo de archivo | S4 |
+| 19 | [feat: agregar componente ProgressBar con barra animada](https://github.com/Jsaez-a113/Certamen3-Aws/commit/a656943c7af61b1eb2491382193d67a7c93c33ca) | Barra de progreso real con animación | S4 |
+| 20 | [feat: agregar SkeletonRow y ConfirmModal para UX de carga y eliminación](https://github.com/Jsaez-a113/Certamen3-Aws/commit/424316dbe875724c37782fa8e0301bc90f3d6d1a) | Skeleton loading y modal de confirmación | S4 |
+| 21 | [feat: agregar ToastContainer y SortHeader para notificaciones y ordenamiento](https://github.com/Jsaez-a113/Certamen3-Aws/commit/e1e429c8c536b76066617a3d85629d2f96a6d619) | Contenedor toast y headers ordenables | S4 |
+| 22 | [feat: implementar estados, efectos y subida con progreso, retry y AbortController](https://github.com/Jsaez-a113/Certamen3-Aws/commit/a36d7929093a5c6201ad6a966499369d39a470ed) | Upload con retry automático y cancelación | S4 |
+| 23 | [feat: implementar drag-drop, eliminar con modal y renombrar con extensión bloqueada](https://github.com/Jsaez-a113/Certamen3-Aws/commit/228c6347284655bd6f6c81fa21e9357935a3af55) | Drag & drop y UX mejorada | S4 |
+| 24 | [feat: rediseñar interfaz completa con header, upload zone, tabla y footer](https://github.com/Jsaez-a113/Certamen3-Aws/commit/24cb39bed2ba170582cf69ef77935ccd6695fd35) | Interfaz final completa y responsiva | S4 |
+| 25 | docs: update README with complete commit history and v1.0.0 tag | README final con historial completo | S4 |
+ 
 ---
 
 ## 14. Screencast
