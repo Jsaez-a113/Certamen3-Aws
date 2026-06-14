@@ -704,179 +704,253 @@ function SortHeader({ label, sortKey, currentSort, onSort, align = "left" }) {
   );
 }
 
+// ============================================================
+// COMPONENTE PRINCIPAL: App
+// ============================================================
+
 export default function App() {
+  // --- Estado principal ---
   const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(true); // estado de carga para skeleton
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  // --- Estado de renombrado ---
   const [renaming, setRenaming] = useState(null);
   const [newName, setNewName] = useState("");
+  const debouncedNewName = useDebounce(newName, DEBOUNCE_DELAY);
 
-  useEffect(() => { fetchFiles(); }, []);
+  // --- Estado de ordenamiento ---
+  const [sort, setSort] = useState({ key: "name", dir: "asc" });
 
-  async function fetchFiles() {
+  // --- Estado del modal de confirmación ---
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "",
+    onConfirm: null,
+  });
+
+  // --- Sistema de toast ---
+  const { toasts, addToast, removeToast } = useToast();
+
+  // --- Refs ---
+  const abortControllerRef = useRef(null); // AbortController para cancelar subidas
+  const fileInputRef = useRef(null);
+  const dragCounterRef = useRef(0); // Contador para drag enter/leave anidados
+
+  // ============================================================
+  // EFECTO: Inyectar animaciones CSS al montar
+  // ============================================================
+
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = CSS_ANIMATIONS;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
+  // ============================================================
+  // EFECTO: Cargar archivos al montar
+  // ============================================================
+
+  useEffect(() => {
+    fetchFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ============================================================
+  // FUNCIONES: Obtener archivos del bucket
+  // ============================================================
+
+  const fetchFiles = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${API}/api/files`);
-      setFiles(res.data.files);
-    } catch {
-      setMessage("Error al cargar archivos");
-    }
-  }
-
-  async function handleUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const ext = file.name.split(".").pop().toLowerCase();
-    if (!["docx", "odt", "rtf"].includes(ext)) {
-      setMessage("❌ Solo se permiten archivos DOCX, ODT o RTF");
-      return;
-    }
-    if (file.size > 14 * 1024 * 1024) {
-      setMessage("❌ El archivo supera el límite de 14 MB");
-      return;
-    }
-
-    setUploading(true);
-    setMessage("");
-    try {
-      const { data } = await axios.post(`${API}/api/upload/presigned-url`, {
-        fileName: file.name,
-        fileType: MIME_TYPES[ext] || file.type,
-        fileSize: file.size,
-      });
-
-      await axios.put(data.presignedUrl, file, {
-        headers: { "Content-Type": MIME_TYPES[ext] || file.type },
-      });
-
-      setMessage("✅ Archivo subido correctamente");
-      fetchFiles();
-    } catch {
-      setMessage("❌ Error al subir el archivo");
+      setFiles(res.data.files || []);
+    } catch (err) {
+      addToast(getErrorMessage(err, "carga de archivos"), "error");
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
-  }
+  }, [addToast]);
 
-  async function handleDelete(name) {
-    if (!confirm(`¿Eliminar ${name}?`)) return;
-    try {
-      await axios.delete(`${API}/api/files/${name}`);
-      setMessage(`✅ ${name} eliminado`);
-      fetchFiles();
-    } catch {
-      setMessage("❌ Error al eliminar");
-    }
-  }
+  // ============================================================
+  // FUNCIÓN: Validar archivo antes de subir (SEC-03, SEC-04)
+  // ============================================================
 
-  async function handleRename(name) {
-    if (!newName.trim()) return;
-    try {
-      await axios.post(`${API}/api/files/${name}/rename`, { newName });
-      setMessage(`✅ Renombrado a ${newName}`);
-      setRenaming(null);
-      setNewName("");
-      fetchFiles();
-    } catch {
-      setMessage("❌ Error al renombrar");
-    }
-  }
+  const validateFile = useCallback(
+    (file) => {
+      const ext = getExtension(file.name);
 
-  function formatSize(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  }
+      // SEC-03: Validar extensión
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        addToast(
+          `Formato no permitido (.${ext}). Solo se aceptan: DOCX, ODT, RTF`,
+          "error"
+        );
+        return false;
+      }
 
-  return (
-    <div style={{ maxWidth: 700, margin: "2rem auto", fontFamily: "sans-serif", padding: "0 1rem" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 4 }}>☁️ ArchivaCloud P-12</h1>
-      <p style={{ color: "#666", marginBottom: 24 }}>Gestor de archivos DOCX · ODT · RTF — máx 14 MB</p>
+      // SEC-04: Validar tamaño (14 MB)
+      if (file.size > MAX_FILE_SIZE) {
+        addToast(
+          `El archivo (${formatSize(file.size)}) supera el límite de 14 MB`,
+          "error"
+        );
+        return false;
+      }
 
-      <div style={{ border: "2px dashed #ccc", borderRadius: 8, padding: 24, textAlign: "center", marginBottom: 24 }}>
-        <input
-          type="file"
-          accept=".docx,.odt,.rtf"
-          onChange={handleUpload}
-          disabled={uploading}
-          style={{ display: "none" }}
-          id="file-input"
-        />
-        <label htmlFor="file-input" style={{
-          cursor: uploading ? "not-allowed" : "pointer",
-          background: "#0066cc", color: "white",
-          padding: "10px 24px", borderRadius: 6, fontSize: 14
-        }}>
-          {uploading ? "Subiendo..." : "Seleccionar archivo"}
-        </label>
-        <p style={{ marginTop: 12, fontSize: 13, color: "#888" }}>DOCX, ODT, RTF · máximo 14 MB</p>
-      </div>
+      // Validar que el archivo no esté vacío
+      if (file.size === 0) {
+        addToast("El archivo está vacío", "error");
+        return false;
+      }
 
-      {message && (
-        <div style={{
-          padding: "10px 16px", borderRadius: 6, marginBottom: 16,
-          background: message.startsWith("✅") ? "#e6f4ea" : "#fce8e6",
-          color: message.startsWith("✅") ? "#137333" : "#c5221f",
-          fontSize: 14
-        }}>
-          {message}
-        </div>
-      )}
-
-      <h2 style={{ fontSize: 16, marginBottom: 12 }}>Archivos en el bucket ({files.length})</h2>
-
-      {files.length === 0 ? (
-        <p style={{ color: "#888", fontSize: 14 }}>No hay archivos subidos aún.</p>
-      ) : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-          <thead>
-            <tr style={{ background: "#f5f5f5" }}>
-              <th style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Nombre</th>
-              <th style={{ padding: "8px 12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Tamaño</th>
-              <th style={{ padding: "8px 12px", textAlign: "center", borderBottom: "1px solid #ddd" }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((f) => (
-              <tr key={f.key} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "8px 12px" }}>{f.name}</td>
-                <td style={{ padding: "8px 12px", color: "#666" }}>{formatSize(f.size)}</td>
-                <td style={{ padding: "8px 12px", textAlign: "center" }}>
-                  {renaming === f.name ? (
-                    <span style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                      <input
-                        value={newName}
-                        onChange={e => setNewName(e.target.value)}
-                        placeholder="nuevo-nombre.docx"
-                        style={{ padding: "4px 8px", fontSize: 13, borderRadius: 4, border: "1px solid #ccc", width: 160 }}
-                      />
-                      <button onClick={() => handleRename(f.name)}
-                        style={{ padding: "4px 10px", background: "#0066cc", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13 }}>
-                        OK
-                      </button>
-                      <button onClick={() => { setRenaming(null); setNewName(""); }}
-                        style={{ padding: "4px 10px", background: "#eee", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13 }}>
-                        ✕
-                      </button>
-                    </span>
-                  ) : (
-                    <span style={{ display: "flex", gap: 6, justifyContent: "center" }}>
-                      <button onClick={() => { setRenaming(f.name); setNewName(f.name); }}
-                        style={{ padding: "4px 10px", background: "#f0a500", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13 }}>
-                        Renombrar
-                      </button>
-                      <button onClick={() => handleDelete(f.name)}
-                        style={{ padding: "4px 10px", background: "#cc0000", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 13 }}>
-                        Eliminar
-                      </button>
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+      return true;
+    },
+    [addToast]
   );
-}
+
+  // ============================================================
+  // FUNCIÓN: Subir archivo con presigned URL
+  // Incluye: barra de progreso real, retry automático,
+  // AbortController para cancelación
+  // ============================================================
+
+  const uploadFile = useCallback(
+    async (file, attempt = 0) => {
+      const ext = getExtension(file.name);
+      const contentType = MIME_TYPES[ext] || file.type;
+
+      // Solo crear AbortController en el primer intento
+      if (attempt === 0) {
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+      }
+      const signal = abortControllerRef.current?.signal;
+
+      // Sanitizar nombre: remueve paréntesis y otros caracteres no permitidos por el backend
+      const safeName = sanitizeFileName(file.name);
+
+      const requestBody = {
+        fileName: safeName,
+        fileType: contentType,
+        fileSize: file.size,
+      };
+
+      try {
+
+        // Paso 1: Obtener presigned URL del backend
+        const { data } = await axios.post(
+          `${API}/api/upload/presigned-url`,
+          requestBody,
+          { signal }
+        );
+
+
+
+        // Paso 2: Subir directamente a S3 con presigned URL
+        await axios.put(data.presignedUrl, file, {
+          headers: { "Content-Type": contentType },
+          signal,
+          // onUploadProgress: barra de progreso real
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const pct = Math.round(
+                (progressEvent.loaded / progressEvent.total) * 100
+              );
+              setUploadProgress(pct);
+            }
+          },
+        });
+
+        // Éxito — limpiar estado
+        addToast(`"${file.name}" subido correctamente`, "success");
+        setUploading(false);
+        setUploadProgress(0);
+        setRetryCount(0);
+        abortControllerRef.current = null;
+        fetchFiles();
+      } catch (err) {
+
+
+        // Si fue cancelado, no reintentar
+        if (axios.isCancel(err)) {
+          addToast("Subida cancelada", "warning");
+          setUploading(false);
+          setUploadProgress(0);
+          setRetryCount(0);
+          abortControllerRef.current = null;
+          return;
+        }
+
+        // Retry automático si no se superó el máximo
+        if (attempt < MAX_UPLOAD_RETRIES) {
+          const nextAttempt = attempt + 1;
+          setRetryCount(nextAttempt);
+          addToast(
+            `Error en la subida. Reintentando (${nextAttempt}/${MAX_UPLOAD_RETRIES})...`,
+            "warning"
+          );
+          // Esperar 1s antes de reintentar
+          await new Promise((r) => setTimeout(r, 1000));
+          return uploadFile(file, nextAttempt);
+        }
+
+        // Máximo de reintentos alcanzado — limpiar estado
+        // Si es 422, mostrar detalles de validación del backend
+        if (err.response?.status === 422) {
+          const detail = err.response.data?.detail;
+          let validationMsg = "Error de validación del servidor";
+          if (Array.isArray(detail)) {
+            // Pydantic v2 devuelve array de errores
+            validationMsg = detail.map((d) => d.msg || d.message || JSON.stringify(d)).join("; ");
+          } else if (typeof detail === "string") {
+            validationMsg = detail;
+          }
+
+          addToast(validationMsg, "error");
+        } else {
+          addToast(getErrorMessage(err, "subida"), "error");
+        }
+
+        setUploading(false);
+        setUploadProgress(0);
+        setRetryCount(0);
+        abortControllerRef.current = null;
+      }
+    },
+    [addToast, fetchFiles]
+  );
+
+  // ============================================================
+  // HANDLER: Procesar archivo seleccionado o arrastrado
+  // ============================================================
+
+  const processFile = useCallback(
+    (file) => {
+      if (!file || uploading) return;
+      if (!validateFile(file)) return;
+
+      setUploading(true);
+      setUploadProgress(0);
+      setRetryCount(0);
+      uploadFile(file);
+    },
+    [uploading, validateFile, uploadFile]
+  );
+
+  // Handler para input de archivo
+  const handleFileInput = useCallback(
+    (e) => {
+      const file = e.target.files?.[0];
+      processFile(file);
+      // Resetear input para permitir re-seleccionar el mismo archivo
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [processFile]
+  );
