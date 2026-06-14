@@ -85,6 +85,61 @@ const C = {
   overlay: "rgba(0, 0, 0, 0.6)",
 };
 
+// ============================================================
+// INYECCIÓN DE ANIMACIONES CSS (keyframes)
+// No es posible hacer keyframes con inline styles,
+// así que los inyectamos una vez al montar la app.
+// ============================================================
+
+const CSS_ANIMATIONS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  @keyframes acSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes acSlideOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-12px); }
+  }
+  @keyframes acFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes acFadeInUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes acPulse {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 0.8; }
+  }
+  @keyframes acShimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes acSpin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes acProgressStripe {
+    0%   { background-position: 0 0; }
+    100% { background-position: 40px 0; }
+  }
+  @keyframes acScaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes acDropBounce {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+  @keyframes acGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(74, 108, 247, 0.15); }
+    50%      { box-shadow: 0 0 25px rgba(74, 108, 247, 0.3); }
+  }
+`;
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
