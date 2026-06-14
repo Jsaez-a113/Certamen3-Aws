@@ -563,6 +563,147 @@ function ConfirmModal({ isOpen, title, message, confirmText, cancelText, onConfi
   );
 }
 
+// ============================================================
+// COMPONENTE: ToastContainer — Contenedor de notificaciones
+// ============================================================
+
+function ToastContainer({ toasts, onRemove }) {
+  if (toasts.length === 0) return null;
+
+  const getToastStyle = (type) => {
+    const map = {
+      success: { bg: C.successBg, border: C.successBorder, color: C.success, icon: "✓" },
+      error: { bg: C.dangerBg, border: C.dangerBorder, color: C.danger, icon: "✕" },
+      warning: { bg: C.warningBg, border: C.warningBorder, color: C.warning, icon: "!" },
+      info: { bg: C.accentGlow, border: "rgba(74,108,247,0.3)", color: C.accent, icon: "ℹ" },
+    };
+    return map[type] || map.info;
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 20,
+        right: 20,
+        zIndex: 10000,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        maxWidth: 380,
+        width: "calc(100% - 40px)",
+      }}
+    >
+      {toasts.map((toast) => {
+        const s = getToastStyle(toast.type);
+        return (
+          <div
+            key={toast.id}
+            style={{
+              background: C.bgCard,
+              border: `1px solid ${s.border}`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+              animation: toast.exiting
+                ? "acSlideOut 0.3s ease forwards"
+                : "acSlideIn 0.3s ease",
+              cursor: "pointer",
+            }}
+            onClick={() => onRemove(toast.id)}
+          >
+            {/* Ícono circular */}
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                background: s.bg,
+                border: `1px solid ${s.border}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 700,
+                color: s.color,
+                flexShrink: 0,
+                marginTop: 1,
+              }}
+            >
+              {s.icon}
+            </div>
+            <p
+              style={{
+                flex: 1,
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: C.text,
+                margin: 0,
+              }}
+            >
+              {toast.message}
+            </p>
+            {/* Botón cerrar */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(toast.id);
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: C.textMuted,
+                cursor: "pointer",
+                fontSize: 16,
+                padding: 0,
+                lineHeight: 1,
+                flexShrink: 0,
+              }}
+            >
+              ×
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// COMPONENTE: SortHeader — Encabezado de columna con ordenamiento
+// ============================================================
+
+function SortHeader({ label, sortKey, currentSort, onSort, align = "left" }) {
+  const isActive = currentSort.key === sortKey;
+  const arrow = isActive ? (currentSort.dir === "asc" ? " ↑" : " ↓") : "";
+
+  return (
+    <th
+      onClick={() => onSort(sortKey)}
+      style={{
+        padding: "12px 16px",
+        textAlign: align,
+        borderBottom: `1px solid ${C.border}`,
+        color: isActive ? C.accent : C.textSoft,
+        fontSize: 12,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+        cursor: "pointer",
+        userSelect: "none",
+        transition: "color 0.2s",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
+      <span style={{ color: C.accent, marginLeft: 2 }}>{arrow}</span>
+    </th>
+  );
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
