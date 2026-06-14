@@ -392,6 +392,177 @@ function ProgressBar({ progress, retryCount }) {
   );
 }
 
+// ============================================================
+// COMPONENTE: SkeletonRow — Fila de esqueleto para carga
+// ============================================================
+
+function SkeletonRow() {
+  const shimmerBg = `linear-gradient(90deg, ${C.bgSurface} 25%, ${C.bgHover} 50%, ${C.bgSurface} 75%)`;
+  return (
+    <tr>
+      {[1, 2, 3, 4].map((i) => (
+        <td key={i} style={{ padding: "14px 16px" }}>
+          <div
+            style={{
+              height: i === 1 ? 18 : 14,
+              width: i === 1 ? "70%" : i === 4 ? "40%" : "50%",
+              background: shimmerBg,
+              backgroundSize: "200% 100%",
+              borderRadius: 4,
+              animation: "acShimmer 1.5s ease-in-out infinite",
+            }}
+          />
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+// ============================================================
+// COMPONENTE: ConfirmModal — Modal de confirmación elegante
+// Reemplaza el confirm() nativo del navegador
+// ============================================================
+
+function ConfirmModal({ isOpen, title, message, confirmText, cancelText, onConfirm, onCancel, danger }) {
+  // Cerrar con Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isOpen, onCancel]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: C.overlay,
+        backdropFilter: "blur(4px)",
+        animation: "acFadeIn 0.2s ease",
+        padding: 20,
+      }}
+      onClick={onCancel}
+    >
+      <div
+        style={{
+          background: C.bgCard,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          padding: "32px 28px 24px",
+          maxWidth: 420,
+          width: "100%",
+          boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
+          animation: "acScaleIn 0.25s ease",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Ícono de advertencia */}
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            background: danger ? C.dangerBg : C.warningBg,
+            border: `1px solid ${danger ? C.dangerBorder : C.warningBorder}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 16px",
+            fontSize: 22,
+          }}
+        >
+          {danger ? "⚠️" : "❓"}
+        </div>
+
+        <h3
+          style={{
+            fontSize: 18,
+            fontWeight: 600,
+            color: C.text,
+            textAlign: "center",
+            margin: "0 0 8px",
+          }}
+        >
+          {title}
+        </h3>
+        <p
+          style={{
+            fontSize: 14,
+            color: C.textSoft,
+            textAlign: "center",
+            margin: "0 0 28px",
+            lineHeight: 1.5,
+          }}
+        >
+          {message}
+        </p>
+
+        <div style={{ display: "flex", gap: 12 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              padding: "10px 16px",
+              background: C.bgSurface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 10,
+              color: C.textSoft,
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = C.bgHover;
+              e.target.style.color = C.text;
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = C.bgSurface;
+              e.target.style.color = C.textSoft;
+            }}
+          >
+            {cancelText || "Cancelar"}
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex: 1,
+              padding: "10px 16px",
+              background: danger ? C.danger : C.accent,
+              border: "none",
+              borderRadius: 10,
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = danger ? C.dangerHover : C.accentHover;
+              e.target.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = danger ? C.danger : C.accent;
+              e.target.style.transform = "translateY(0)";
+            }}
+          >
+            {confirmText || "Confirmar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
