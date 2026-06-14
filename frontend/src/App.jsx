@@ -954,3 +954,138 @@ export default function App() {
     },
     [processFile]
   );
+
+  // ============================================================
+  // HANDLERS: Drag & Drop
+  // ============================================================
+
+  const handleDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) setDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragging(false);
+      dragCounterRef.current = 0;
+
+      const file = e.dataTransfer?.files?.[0];
+      processFile(file);
+    },
+    [processFile]
+  );
+
+  // ============================================================
+  // HANDLER: Cancelar subida en progreso
+  // ============================================================
+
+  const cancelUpload = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  }, []);
+
+  // ============================================================
+  // HANDLER: Eliminar archivo (con modal de confirmación)
+  // ============================================================
+
+  const handleDelete = useCallback(
+    (name) => {
+      setConfirmModal({
+        isOpen: true,
+        title: "Eliminar archivo",
+        message: `¿Estás seguro de eliminar "${name}"? Esta acción no se puede deshacer.`,
+        confirmText: "Eliminar",
+        onConfirm: async () => {
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+          try {
+            await axios.delete(`${API}/api/files/${encodeURIComponent(name)}`);
+            addToast(`"${name}" eliminado correctamente`, "success");
+            fetchFiles();
+          } catch (err) {
+            addToast(getErrorMessage(err, "eliminación"), "error");
+          }
+        },
+      });
+    },
+    [addToast, fetchFiles]
+  );
+
+  // ============================================================
+  // HANDLER: Renombrar archivo
+  // Usa el valor debounced para evitar requests mientras se escribe
+  // ============================================================
+
+  const handleRename = useCallback(
+    async (oldName) => {
+      const trimmed = debouncedNewName.trim();
+      if (!trimmed) {
+        addToast("El nombre no puede estar vacío", "warning");
+        return;
+      }
+
+      // La extensión se preserva automáticamente del archivo original
+      const originalExt = getExtension(oldName);
+      const fullNewName = `${trimmed}.${originalExt}`;
+
+      try {
+        await axios.post(`${API}/api/files/${encodeURIComponent(oldName)}/rename`, {
+          newName: fullNewName,
+        });
+        addToast(`Renombrado: "${oldName}" → "${fullNewName}"`, "success");
+        setRenaming(null);
+        setNewName("");
+        fetchFiles();
+      } catch (err) {
+        addToast(getErrorMessage(err, "renombrado"), "error");
+      }
+    },
+    [debouncedNewName, addToast, fetchFiles]
+  );
+
+  // ============================================================
+  // HANDLER: Ordenamiento de columnas
+  // ============================================================
+
+  const handleSort = useCallback((key) => {
+    setSort((prev) => ({
+      key,
+      dir: prev.key === key && prev.dir === "asc" ? "desc" : "asc",
+    }));
+  }, []);
+
+  // ============================================================
+  // MEMO: Lista de archivos ordenada — evita reordenar en cada render
+  // ============================================================
+
+  const sortedFiles = useMemo(() => {
+    const sorted = [...files];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sort.key === "name") {
+        cmp = (a.name || "").localeCompare(b.name || "", "es");
+      } else if (sort.key === "size") {
+        cmp = (a.size || 0) - (b.size || 0);
+      } else if (sort.key === "lastModified") {
+        cmp = new Date(a.lastModified || 0) - new Date(b.lastModified || 0);
+      }
+      return sort.dir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [files, sort]);
