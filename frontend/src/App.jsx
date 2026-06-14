@@ -327,6 +327,71 @@ function FileIcon({ extension, size = 32 }) {
   );
 }
 
+// ============================================================
+// COMPONENTE: ProgressBar — Barra de progreso con animación
+// ============================================================
+
+function ProgressBar({ progress, retryCount }) {
+  return (
+    <div style={{ width: "100%", marginTop: 16 }}>
+      {/* Texto de estado */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 8,
+          fontSize: 13,
+          color: C.textSoft,
+        }}
+      >
+        <span>
+          {progress < 100
+            ? `Subiendo archivo${retryCount > 0 ? ` (reintento ${retryCount}/${MAX_UPLOAD_RETRIES})` : ""}...`
+            : "Procesando..."}
+        </span>
+        <span style={{ fontWeight: 600, color: C.accent }}>{Math.round(progress)}%</span>
+      </div>
+
+      {/* Contenedor de la barra */}
+      <div
+        style={{
+          width: "100%",
+          height: 6,
+          background: C.bgSurface,
+          borderRadius: 3,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        {/* Barra de progreso con efecto de rayas animadas */}
+        <div
+          style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: `linear-gradient(90deg, ${C.accent}, ${C.accentHover})`,
+            borderRadius: 3,
+            transition: "width 0.3s ease",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Rayas animadas */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage:
+                "linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent)",
+              backgroundSize: "20px 20px",
+              animation: "acProgressStripe 0.8s linear infinite",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
