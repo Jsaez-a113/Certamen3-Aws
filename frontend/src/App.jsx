@@ -1089,3 +1089,813 @@ export default function App() {
     });
     return sorted;
   }, [files, sort]);
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+
+  return (
+    <div
+      style={{
+        maxWidth: 900,
+        margin: "0 auto",
+        padding: "32px 20px 48px",
+        minHeight: "100vh",
+        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+      }}
+    >
+      {/* === TOASTS === */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* === MODAL DE CONFIRMACIÓN === */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        cancelText="Cancelar"
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        danger
+      />
+
+      {/* ============================================================
+          HEADER
+          ============================================================ */}
+      <header
+        style={{
+          marginBottom: 32,
+          animation: "acFadeInUp 0.5s ease",
+        }}
+      >
+        {/* Logotipo y badge */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 14,
+            marginBottom: 8,
+          }}
+        >
+          {/* Ícono de nube */}
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: `linear-gradient(135deg, ${C.accent}, ${C.accentHover})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 24,
+              boxShadow: `0 4px 16px ${C.accentGlowStrong}`,
+            }}
+          >
+            ☁️
+          </div>
+          <div>
+            <h1
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                color: C.text,
+                margin: 0,
+                letterSpacing: "-0.5px",
+              }}
+            >
+              ArchivaCloud{" "}
+              <span style={{ color: C.accent, fontWeight: 300 }}>P-12</span>
+            </h1>
+            <p
+              style={{
+                fontSize: 13,
+                color: C.textMuted,
+                margin: 0,
+                letterSpacing: "0.2px",
+              }}
+            >
+              Gestor documental · Amazon S3 · us-east-1
+            </p>
+          </div>
+        </div>
+
+        {/* Badges de formatos soportados */}
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginTop: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          {[
+            { ext: "DOCX", color: C.docxColor },
+            { ext: "ODT", color: C.odtColor },
+            { ext: "RTF", color: C.rtfColor },
+          ].map(({ ext, color }) => (
+            <span
+              key={ext}
+              style={{
+                padding: "4px 12px",
+                borderRadius: 20,
+                fontSize: 11,
+                fontWeight: 600,
+                color: color,
+                background: `${color}15`,
+                border: `1px solid ${color}30`,
+                letterSpacing: "0.5px",
+              }}
+            >
+              {ext}
+            </span>
+          ))}
+          <span
+            style={{
+              padding: "4px 12px",
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 500,
+              color: C.textMuted,
+              background: C.bgSurface,
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            máx 14 MB
+          </span>
+        </div>
+      </header>
+
+      {/* ============================================================
+          ZONA DE SUBIDA — DRAG & DROP
+          ============================================================ */}
+      <div
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        style={{
+          border: `2px dashed ${dragging ? C.borderDrag : C.border}`,
+          borderRadius: 16,
+          padding: uploading ? "28px 24px" : "40px 24px",
+          textAlign: "center",
+          marginBottom: 32,
+          background: dragging ? C.accentGlow : C.bgCard,
+          transition: "all 0.3s ease",
+          animation: dragging ? "acDropBounce 0.3s ease" : "acFadeInUp 0.6s ease",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Efecto de brillo sutil en hover */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: `linear-gradient(90deg, transparent, ${C.accentGlowStrong}, transparent)`,
+            opacity: dragging ? 1 : 0,
+            transition: "opacity 0.3s",
+          }}
+        />
+
+        {uploading ? (
+          /* ---- ESTADO: Subiendo ---- */
+          <div>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                margin: "0 auto 12px",
+                border: `3px solid ${C.border}`,
+                borderTopColor: C.accent,
+                borderRadius: "50%",
+                animation: "acSpin 0.8s linear infinite",
+              }}
+            />
+            <ProgressBar progress={uploadProgress} retryCount={retryCount} />
+            <button
+              onClick={cancelUpload}
+              style={{
+                marginTop: 16,
+                padding: "8px 20px",
+                background: "transparent",
+                border: `1px solid ${C.dangerBorder}`,
+                borderRadius: 8,
+                color: C.danger,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = C.dangerBg;
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "transparent";
+              }}
+            >
+              Cancelar subida
+            </button>
+          </div>
+        ) : (
+          /* ---- ESTADO: Esperando archivo ---- */
+          <div>
+            {/* Ícono de upload */}
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                margin: "0 auto 16px",
+                borderRadius: "50%",
+                background: C.accentGlow,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={C.accent}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+
+            <p
+              style={{
+                fontSize: 15,
+                fontWeight: 500,
+                color: C.text,
+                margin: "0 0 6px",
+              }}
+            >
+              {dragging
+                ? "Suelta el archivo aquí"
+                : "Arrastra un archivo o haz clic para seleccionar"}
+            </p>
+            <p
+              style={{
+                fontSize: 12,
+                color: C.textMuted,
+                margin: "0 0 20px",
+              }}
+            >
+              Formatos: DOCX, ODT, RTF · Tamaño máximo: 14 MB
+            </p>
+
+            {/* Input de archivo oculto */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".docx,.odt,.rtf"
+              onChange={handleFileInput}
+              style={{ display: "none" }}
+              id="file-upload-input"
+            />
+            <label
+              htmlFor="file-upload-input"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 28px",
+                background: `linear-gradient(135deg, ${C.accent}, ${C.accentHover})`,
+                color: "#fff",
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.25s ease",
+                boxShadow: `0 4px 12px ${C.accentGlowStrong}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = `0 6px 20px ${C.accentGlowStrong}`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = `0 4px 12px ${C.accentGlowStrong}`;
+              }}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Seleccionar archivo
+            </label>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================
+          TABLA DE ARCHIVOS
+          ============================================================ */}
+      <div
+        style={{
+          background: C.bgCard,
+          borderRadius: 16,
+          border: `1px solid ${C.border}`,
+          overflow: "hidden",
+          animation: "acFadeInUp 0.7s ease",
+        }}
+      >
+        {/* Header de la tabla */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "16px 20px",
+            borderBottom: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h2
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: C.text,
+                margin: 0,
+              }}
+            >
+              Archivos
+            </h2>
+            <span
+              style={{
+                padding: "2px 10px",
+                borderRadius: 12,
+                fontSize: 12,
+                fontWeight: 600,
+                color: C.accent,
+                background: C.accentGlow,
+              }}
+            >
+              {loading ? "..." : files.length}
+            </span>
+          </div>
+
+          {/* Botón de refrescar */}
+          <button
+            onClick={fetchFiles}
+            disabled={loading}
+            style={{
+              background: C.bgSurface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              padding: "6px 14px",
+              color: C.textSoft,
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              transition: "all 0.2s",
+              opacity: loading ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.currentTarget.style.background = C.bgHover;
+                e.currentTarget.style.borderColor = C.accent;
+                e.currentTarget.style.color = C.text;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = C.bgSurface;
+              e.currentTarget.style.borderColor = C.border;
+              e.currentTarget.style.color = C.textSoft;
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{
+                animation: loading ? "acSpin 1s linear infinite" : "none",
+              }}
+            >
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            Actualizar
+          </button>
+        </div>
+
+        {/* Tabla */}
+        <div style={{ overflowX: "auto" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: 14,
+            }}
+          >
+            <thead>
+              <tr style={{ background: C.bgSurface }}>
+                <SortHeader label="Archivo" sortKey="name" currentSort={sort} onSort={handleSort} />
+                <SortHeader label="Tamaño" sortKey="size" currentSort={sort} onSort={handleSort} />
+                <SortHeader label="Modificado" sortKey="lastModified" currentSort={sort} onSort={handleSort} />
+                <th
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "center",
+                    borderBottom: `1px solid ${C.border}`,
+                    color: C.textMuted,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Estado de carga: skeleton */}
+              {loading &&
+                [1, 2, 3, 4].map((i) => <SkeletonRow key={`skeleton-${i}`} />)}
+
+              {/* Sin archivos */}
+              {!loading && files.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    style={{
+                      padding: "48px 16px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: "50%",
+                          background: C.bgSurface,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 24,
+                        }}
+                      >
+                        📁
+                      </div>
+                      <p
+                        style={{
+                          fontSize: 14,
+                          color: C.textMuted,
+                          margin: 0,
+                        }}
+                      >
+                        No hay archivos en el bucket
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: C.textMuted,
+                          margin: 0,
+                          opacity: 0.7,
+                        }}
+                      >
+                        Arrastra un archivo o usa el botón de subida
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+
+              {/* Lista de archivos */}
+              {!loading &&
+                sortedFiles.map((f, idx) => {
+                  const ext = getExtension(f.name);
+                  const isRenaming = renaming === f.name;
+
+                  return (
+                    <tr
+                      key={f.key || f.name}
+                      style={{
+                        borderBottom: `1px solid ${C.border}`,
+                        transition: "background 0.2s",
+                        animation: `acFadeInUp ${0.3 + idx * 0.05}s ease`,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = C.bgHover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      {/* Nombre + ícono */}
+                      <td style={{ padding: "14px 16px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <FileIcon extension={ext} size={30} />
+                          <span
+                            style={{
+                              color: C.text,
+                              fontWeight: 500,
+                              wordBreak: "break-all",
+                            }}
+                          >
+                            {f.name}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Tamaño */}
+                      <td
+                        style={{
+                          padding: "14px 16px",
+                          color: C.textSoft,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatSize(f.size)}
+                      </td>
+
+                      {/* Fecha de modificación */}
+                      <td
+                        style={{
+                          padding: "14px 16px",
+                          color: C.textMuted,
+                          fontSize: 13,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatDate(f.lastModified)}
+                      </td>
+
+                      {/* Acciones */}
+                      <td style={{ padding: "14px 16px", textAlign: "center" }}>
+                        {isRenaming ? (
+                          /* ---- Modo renombrar ---- */
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 6,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+                              <input
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleRename(f.name);
+                                  if (e.key === "Escape") {
+                                    setRenaming(null);
+                                    setNewName("");
+                                  }
+                                }}
+                                placeholder="nuevo-nombre"
+                                autoFocus
+                                style={{
+                                  padding: "0 10px",
+                                  fontSize: 13,
+                                  lineHeight: "32px",
+                                  height: 32,
+                                  boxSizing: "border-box",
+                                  borderRadius: "6px 0 0 6px",
+                                  border: `1px solid ${C.borderFocus}`,
+                                  borderRight: "none",
+                                  background: C.bgInput,
+                                  color: C.text,
+                                  width: 130,
+                                  outline: "none",
+                                  transition: "border-color 0.2s",
+                                }}
+                              />
+                              {/* Extensión fija no editable */}
+                              <span
+                                style={{
+                                  padding: "0 10px",
+                                  fontSize: 13,
+                                  lineHeight: "32px",
+                                  height: 32,
+                                  boxSizing: "border-box",
+                                  borderRadius: "0 6px 6px 0",
+                                  border: `1px solid ${C.borderFocus}`,
+                                  background: C.bgSurface,
+                                  color: C.textMuted,
+                                  fontWeight: 500,
+                                  userSelect: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
+                              >
+                                .{getExtension(f.name)}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleRename(f.name)}
+                              style={{
+                                padding: "6px 12px",
+                                background: C.accent,
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = C.accentHover;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = C.accent;
+                              }}
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => {
+                                setRenaming(null);
+                                setNewName("");
+                              }}
+                              style={{
+                                padding: "6px 12px",
+                                background: C.bgSurface,
+                                color: C.textSoft,
+                                border: `1px solid ${C.border}`,
+                                borderRadius: 6,
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                transition: "all 0.2s",
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = C.bgHover;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = C.bgSurface;
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          /* ---- Botones normales ---- */
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 6,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <button
+                              onClick={() => {
+                                setRenaming(f.name);
+                                // Solo el nombre base, sin extensión
+                                const baseName = f.name.substring(0, f.name.length - getExtension(f.name).length - 1);
+                                setNewName(baseName);
+                              }}
+                              title="Renombrar archivo"
+                              style={{
+                                padding: "6px 14px",
+                                background: C.warningBg,
+                                color: C.warning,
+                                border: `1px solid ${C.warningBorder}`,
+                                borderRadius: 8,
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 500,
+                                transition: "all 0.2s",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = `${C.warning}25`;
+                                e.currentTarget.style.transform = "translateY(-1px)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = C.warningBg;
+                                e.currentTarget.style.transform = "translateY(0)";
+                              }}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                              Renombrar
+                            </button>
+                            <button
+                              onClick={() => handleDelete(f.name)}
+                              title="Eliminar archivo"
+                              style={{
+                                padding: "6px 14px",
+                                background: C.dangerBg,
+                                color: C.danger,
+                                border: `1px solid ${C.dangerBorder}`,
+                                borderRadius: 8,
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 500,
+                                transition: "all 0.2s",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = `${C.danger}25`;
+                                e.currentTarget.style.transform = "translateY(-1px)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = C.dangerBg;
+                                e.currentTarget.style.transform = "translateY(0)";
+                              }}
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                              Eliminar
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ============================================================
+          FOOTER
+          ============================================================ */}
+      <footer
+        style={{
+          marginTop: 32,
+          textAlign: "center",
+          fontSize: 12,
+          color: C.textMuted,
+          opacity: 0.6,
+        }}
+      >
+        ArchivaCloud P-12 · Bucket: archivacloud-p12 · Región: us-east-1
+      </footer>
+    </div>
+  );
+}
