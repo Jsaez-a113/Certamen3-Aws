@@ -36,6 +36,55 @@ const TOAST_DURATION = 4500;
 // Delay del debounce para el input de renombrar (ms)
 const DEBOUNCE_DELAY = 300;
 
+// ============================================================
+// PALETA DE COLORES — TEMA OSCURO PROFESIONAL
+// ============================================================
+
+const C = {
+  // Fondos
+  bg: "#0b0e14",
+  bgCard: "#131720",
+  bgSurface: "#1a1f2e",
+  bgHover: "#1e2538",
+  bgInput: "#0f1219",
+
+  // Bordes
+  border: "#232a3b",
+  borderFocus: "#4a6cf7",
+  borderDrag: "#4a6cf7",
+
+  // Textos
+  text: "#e2e8f0",
+  textSoft: "#8892a8",
+  textMuted: "#5a6478",
+
+  // Acentos
+  accent: "#4a6cf7",
+  accentHover: "#5b7dff",
+  accentGlow: "rgba(74, 108, 247, 0.15)",
+  accentGlowStrong: "rgba(74, 108, 247, 0.3)",
+
+  // Estados
+  success: "#22c55e",
+  successBg: "rgba(34, 197, 94, 0.1)",
+  successBorder: "rgba(34, 197, 94, 0.3)",
+  danger: "#ef4444",
+  dangerBg: "rgba(239, 68, 68, 0.1)",
+  dangerBorder: "rgba(239, 68, 68, 0.3)",
+  dangerHover: "#dc2626",
+  warning: "#f59e0b",
+  warningBg: "rgba(245, 158, 11, 0.1)",
+  warningBorder: "rgba(245, 158, 11, 0.3)",
+
+  // Colores por tipo de archivo
+  docxColor: "#2b5797",
+  odtColor: "#00a651",
+  rtfColor: "#7c3aed",
+
+  // Overlay
+  overlay: "rgba(0, 0, 0, 0.6)",
+};
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
