@@ -260,6 +260,73 @@ function getErrorMessage(error, context = "operación") {
   return `Error inesperado en ${context}`;
 }
 
+// ============================================================
+// COMPONENTE: FileIcon — Ícono SVG según extensión
+// ============================================================
+
+function FileIcon({ extension, size = 32 }) {
+  const ext = extension?.toLowerCase();
+  const colors = {
+    docx: { primary: C.docxColor, label: "W", name: "DOCX" },
+    odt: { primary: C.odtColor, label: "O", name: "ODT" },
+    rtf: { primary: C.rtfColor, label: "R", name: "RTF" },
+  };
+  const config = colors[ext] || { primary: C.textMuted, label: "?", name: "?" };
+
+  return (
+    <div
+      style={{
+        width: size,
+        height: size + 6,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+        flexShrink: 0,
+      }}
+    >
+      {/* Ícono de documento con esquina doblada */}
+      <svg width={size * 0.75} height={size * 0.85} viewBox="0 0 24 28" fill="none">
+        <path
+          d="M2 3C2 1.89543 2.89543 1 4 1H16L22 7V25C22 26.1046 21.1046 27 20 27H4C2.89543 27 2 26.1046 2 25V3Z"
+          fill={config.primary}
+          fillOpacity="0.15"
+          stroke={config.primary}
+          strokeWidth="1.5"
+        />
+        <path
+          d="M16 1L22 7H18C16.8954 7 16 6.10457 16 5V1Z"
+          fill={config.primary}
+          fillOpacity="0.3"
+        />
+        <text
+          x="12"
+          y="19"
+          textAnchor="middle"
+          fill={config.primary}
+          fontSize="9"
+          fontWeight="700"
+          fontFamily="Inter, sans-serif"
+        >
+          {config.label}
+        </text>
+      </svg>
+      <span
+        style={{
+          fontSize: 8,
+          fontWeight: 700,
+          color: config.primary,
+          letterSpacing: "0.5px",
+          lineHeight: 1,
+        }}
+      >
+        {config.name}
+      </span>
+    </div>
+  );
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
