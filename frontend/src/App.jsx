@@ -140,6 +140,20 @@ const CSS_ANIMATIONS = `
   }
 `;
 
+// ============================================================
+// HOOK: useDebounce — retrasa la actualización de un valor
+// Uso: evitar llamadas excesivas al cambiar el nombre
+// ============================================================
+
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function App() {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
