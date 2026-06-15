@@ -56,7 +56,8 @@ La aplicación sigue el patrón de **presigned URLs**. El archivo nunca pasa por
 
 ### Diagrama manuscrito
 
-📷 Ver foto en `docs/arquitectura.jpg`
+📷 Ver foto en [`docs/diagrama de arquitectura.png`](https://github.com/Jsaez-a113/Certamen3-Aws/blob/main/docs/diagrama%20de%20arquitectura.png)
+📷 Ver foto en [`docs/Diagrama tipo flowchart.png`](https://github.com/Jsaez-a113/Certamen3-Aws/blob/main/docs/Diagrama%20tipo%20flowchart.png)
 
 ---
 
@@ -281,7 +282,7 @@ Ver capturas en: `docs/feature-extra.md`
 | SEC-09 | pip-audit y npm audit sin vulnerabilidades | ✅ |
 | SEC-10 | HTTPS en producción (documentado) | ✅ |
 
-Ver detalles en: `docs/reporte-seguridad.md`
+Ver detalles en: [`docs/reporte-seguridad.md`](https://github.com/Jsaez-a113/Certamen3-Aws/blob/main/docs/reporte-seguridad.md)
 
 ---
 
