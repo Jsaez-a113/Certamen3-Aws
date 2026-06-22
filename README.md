@@ -168,8 +168,18 @@ source venv/bin/activate
 # 3. Instalar dependencias
 pip install -r requirements.txt
 
+# Si sucede un error es debido a que la version de python es demasiado nuevo
+# La solución es instalar la versión más nueva de pydantic que sí tenga wheels para Python 3.14:
+pip install "pydantic==2.11.0" --only-binary=:all:
+
+# Si tampoco funciona, instala la última versión disponible:
+pip install pydantic --only-binary=:all: --upgrade
+
+# Luego instala el resto:
+pip install fastapi uvicorn boto3 python-dotenv --only-binary=:all:
+
 # 4. Configurar credenciales
-cp .env.example .env
+copy .env.example .env
 # Editar .env con las credenciales de Vocareum (AWS Details)
 
 # 5. Levantar el servidor
